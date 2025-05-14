@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/header_genie.png" width=900>
 
-# Hands-On LAB 01 - Importing Data
+# Hands-On LAB 00 - Importing Data
 
 Hands-on training on the Databricks platform focusing on Exploratory Analysis and Dashboard features.
 
@@ -41,5 +41,3 @@ Select the Catalog name (ACADEMY), the Schema name (GENIE_AIBI), and a name for 
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/lab1_04.png" width=900>
 </br></br>
 </br></br></br>
-
-Let me know if you'd like me to make any changes!

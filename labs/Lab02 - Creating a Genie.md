@@ -8,15 +8,7 @@ Hands-on training on the Databricks platform with a focus on question and answer
 
 ## Exercise Objectives
 
-The objective of this lab is to use the AI/BI Genie to enable sales data analysis using only **English** (original text was Spanish, but it was not used in the rest of the document).
-
-</br></br>
-
-## Exercise 03.00 - Preparation
-
-1. At some point, we will use the SQL Editor. Leave it open in another window and select your database.
-
-<img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/genie_04.png">
+The objective of this lab is to use the AI/BI Genie to enable sales data analysis using only **English**.
 
 </br></br>
 
@@ -32,10 +24,10 @@ Let's start by creating a Genie to ask our questions. To do this, follow the ste
     - Create a name for your Genie, for example `<your initials> Sales Genie`
     - Select your SQL Warehouse
     - Select the following tables:
-        - sales (vendas)
-        - inventory (inventario)
-        - medicine dimension (dim_medicamento)
-        - store dimension (dim_loja)
+        - sales
+        - inventory
+        - dim_product
+        - dim_store
     - Click on `Save`
 
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/genie_02.png" width=800>
@@ -83,8 +75,8 @@ Let's see how it works:
 1. Ask the following question:
     - What is the total sales value per store? Show the store name
 
-2. Oops, it seems like the Genie couldn't figure out which column contains the store name. Use the SQL Editor to add a comment to the **nlj** column of the **dim_loja** table and explain that it contains that information
-    - `ALTER TABLE dim_loja ALTER COLUMN nlj COMMENT 'Store name'`
+2. Oops, it seems like the Genie couldn't figure out which column contains the store name. Use the SQL Editor to add a comment to the **nlj** column of the **dim_store** table and explain that it contains that information
+    - `ALTER TABLE dim_store ALTER COLUMN nlj COMMENT 'Store name'`
 
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/genie_06.png"><br><br>
 
@@ -100,16 +92,16 @@ However, our query still didn't return any results. Let's look for a solution!
 
 ## Exercise 03.04 - Using Primary Keys
 
-Apparently, the **id_loja** column of the **dim_loja** table is not the best field to join with the sales table. In fact, the correct column is **cod**!
+Apparently, the **id_loja** column of the **dim_store** table is not the best field to join with the sales table. In fact, the correct column is **cod**!
 
 Let's add primary and foreign keys to those tables so that the Genie doesn't have to infer how to join them!
 
-1. Use the SQL Editor to add primary and foreign keys to the `dim_loja` and `vendas` tables
+1. Use the SQL Editor to add primary and foreign keys to the `dim_store` and `sales` tables
 
 ``` sql
-ALTER TABLE dim_loja ALTER COLUMN cod SET NOT NULL;
-ALTER TABLE dim_loja ADD CONSTRAINT pk_dim_loja PRIMARY KEY (cod);
-ALTER TABLE vendas ADD CONSTRAINT fk_venda_dim_loja FOREIGN KEY (id_loja) REFERENCES dim_loja(cod);
+ALTER TABLE dim_store ALTER COLUMN cod SET NOT NULL;
+ALTER TABLE dim_store ADD CONSTRAINT pk_dim_store PRIMARY KEY (cod);
+ALTER TABLE sales ADD CONSTRAINT fk_sales_dim_store FOREIGN KEY (id_loja) REFERENCES dim_store(cod);
 ```
 2. Ask the previous question again in the Genie
 
@@ -133,7 +125,7 @@ Let's see it in practice:
     - Calculate the number of items sold for prescription
 
 2. Actually, we don't have enough information in our database to answer that question! To do that, add the following instruction:
-    - `* to calculate indicators on prescription use categoria_regulatoria <> 'GENERIC'`
+    - `* to calculate indicators on prescription use categoria_regulatoria <> 'GENÉRICO'`
 
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/genie_07.png">
 
@@ -159,7 +151,7 @@ Let's see how it works:
     - Click on `Add Example Query`
     - In the top field, enter the previous question
     - In the bottom field, enter the SQL query
-        - `SELECT window.end AS dt_venda, SUM(vl_venda) FROM vendas GROUP BY WINDOW(dt_venda, '90 days', '1 day')`
+        - `SELECT window.end AS dt_venda, SUM(vl_venda) FROM sales GROUP BY WINDOW(dt_venda, '90 days', '1 day')`
 
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/genie_08.png">
 
@@ -185,17 +177,17 @@ Let's see it in practice:
 2. Actually, we don't have enough information in our database to answer that question! To do that, create the function below with the logic to calculate the average projected profit of a product:
 
 ``` sql
-CREATE OR REPLACE FUNCTION calc_lucro(medicamento STRING)
-  RETURNS TABLE(nome_medicamento STRING, lucro_proyectado DOUBLE)
+CREATE OR REPLACE FUNCTION calc_profit(medicine STRING)
+  RETURNS TABLE(nome_medicamento STRING, projected_profit DOUBLE)
   COMMENT 'Use this function to calculate the projected profit of a medicine'
   RETURN 
     SELECT
-      m.nome_medicamento,
-      sum(case when m.categoria_regulatoria == 'GENERIC' then 1 else 0.5 end * v.vl_venda) / sum(v.qt_venda) as lucro_proyectado
-    FROM vendas v
-    LEFT JOIN dim_medicamento m
+      m.nome_medicamento as medicine,
+      sum(case when m.categoria_regulatoria == 'GENÉRICO' then 1 else 0.5 end * v.vl_venda) / sum(v.qt_venda) as projected_profit
+    FROM sales v
+    LEFT JOIN dim_product m
     ON v.id_produto = m.id_produto
-    WHERE m.nome_medicamento = calc_lucro.medicamento
+    WHERE m.nome_medicamento = calc_profit.medicine
     GROUP BY ALL
 ```
 

@@ -33,7 +33,7 @@ As we type in the editable line, options based on the table context will appear.
 Type the following phrase in the assistant line:
 </br></br>
 ``` sql
-volume of shares per day and per company 
+chart of volume of shares per day and per company 
 ``` 
 </br></br>
 <img src="https://raw.githubusercontent.com/Databricks-BR/genie_ai_bi/main/images/lab2_03.png" width="600px">
